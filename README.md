@@ -19,10 +19,11 @@
   <img src="output/dashboard.png" alt="Jakarta Transit Dashboard" width="900"/>
 </p>
 
-The dashboard above visualizes ridership patterns from **real Transjakarta (Jakarta's BRT) transaction data** (April 2023):
+The dashboard above visualizes ridership patterns from **real Transjakarta (Jakarta's BRT) transaction data** (April 2023), with a title header, **4 KPI summary cards**, and 4 analysis panels:
 
 | Panel | Insight |
 |-------|---------|
+| **KPI Cards** | Average daily trips (1,218), peak hour (6:00), median trip duration (71 min), busiest corridor (Cibubur–Balai Kota) |
 | **Hourly Trips** | Weekday ridership spikes at 6–7 AM and 5–6 PM commute peaks; weekends stay flat and low |
 | **Top Corridors** | Cibubur–Balai Kota and Ciputat–CSW are the busiest routes |
 | **Daily Trend** | Weekdays carry ~90% of trips; weekends drop sharply |
@@ -38,6 +39,7 @@ jakarta-urban-mobility-analysis/
 │   └── transjakarta_trips.csv    # Cleaned, PII-stripped trip data (36,556 rows)
 ├── data_loader.py                # Load, clean & feature engineering
 ├── charts.py                     # 7 visualization functions
+├── build_dashboard.py            # Portfolio dashboard builder (title + KPI cards + 2×2)
 ├── main.py                       # Pipeline orchestrator + summary stats
 ├── prepare_data.py               # (One-off) PII strip + derive features from raw export
 ├── output/

@@ -5,3 +5,4 @@ __pycache__/
 .kaggle/
 *.kaggle.json
 access_token
+assets/
