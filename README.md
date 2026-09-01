@@ -1,14 +1,14 @@
-<h1 align="center">🚗 Jakarta Urban Mobility Analysis</h1>
+<h1 align="center">🚌 Jakarta Public Transit Data Analysis</h1>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python"/>
   <img src="https://img.shields.io/badge/Pandas-Data%20Analysis-150458?style=for-the-badge&logo=pandas&logoColor=white" alt="Pandas"/>
   <img src="https://img.shields.io/badge/Matplotlib-Visualization-F1502F?style=for-the-badge&logo=matplotlib&logoColor=white" alt="Matplotlib"/>
-  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License"/>
+  <img src="https://img.shields.io/badge/License-CC0-blue?style=for-the-badge" alt="License"/>
 </p>
 
 <p align="center">
-  End-to-end analysis of <b>65,000+ traffic records</b> across Jakarta's major corridors — from raw time-series data to interactive visualizations and congestion insights.
+  End-to-end analysis of <b>36,000+ Transjakarta trips</b> — from raw public-transit transactions to ridership insights and interactive visualizations.
 </p>
 
 ---
@@ -16,17 +16,17 @@
 ## 📊 Dashboard
 
 <p align="center">
-  <img src="output/dashboard.png" alt="Jakarta Mobility Dashboard" width="900"/>
+  <img src="output/dashboard.png" alt="Jakarta Transit Dashboard" width="900"/>
 </p>
 
-The dashboard above visualizes key congestion patterns across **15 major roads** and **13 districts** (Jan–Jun 2024):
+The dashboard above visualizes ridership patterns from **real Transjakarta (Jakarta's BRT) transaction data** (April 2023):
 
 | Panel | Insight |
 |-------|---------|
-| **Hourly Volume** | Weekday traffic peaks at 6–9 AM and 4–8 PM rush hours; weekends flat and low |
-| **Congestion by Hour** | Severe congestion concentrated during morning and evening rush (6–9 AM, 4–8 PM) |
-| **Worst Roads** | Jl. Benyamin Suaeb and Jl. Pangeran Jayakarta are the most congested corridors |
-| **Speed Heatmap** | Rush-hour speeds drop below 15 km/h on key arteries like Sudirman, Thamrin, and TB Simatupang |
+| **Hourly Trips** | Weekday ridership spikes at 6–7 AM and 5–6 PM commute peaks; weekends stay flat and low |
+| **Top Corridors** | Cibubur–Balai Kota and Ciputat–CSW are the busiest routes |
+| **Daily Trend** | Weekdays carry ~90% of trips; weekends drop sharply |
+| **Ridership Heatmap** | Commuting hours dominate Mon–Fri; density nearly vanishes on weekends |
 
 ---
 
@@ -34,20 +34,22 @@ The dashboard above visualizes key congestion patterns across **15 major roads**
 
 ```
 jakarta-urban-mobility-analysis/
-├── jakarta_traffic_data.csv       # 65K+ synthetic records (Jakarta traffic patterns)
-├── data_loader.py                 # Load, clean & feature engineering
-├── charts.py                      # 7 visualization functions
-├── main.py                        # Pipeline orchestrator + summary stats
+├── data/
+│   └── transjakarta_trips.csv    # Cleaned, PII-stripped trip data (36,556 rows)
+├── data_loader.py                # Load, clean & feature engineering
+├── charts.py                     # 7 visualization functions
+├── main.py                       # Pipeline orchestrator + summary stats
+├── prepare_data.py               # (One-off) PII strip + derive features from raw export
 ├── output/
-│   └── dashboard.png              # README showcase dashboard (2×2 grid)
-├── charts/                        # Generated PNG charts
-│   ├── hourly_volume.png
-│   ├── congestion_by_hour.png
-│   ├── worst_roads.png
-│   ├── monthly_trend.png
-│   ├── weather_impact.png
-│   ├── vehicle_mix.png
-│   └── congestion_heatmap.png
+│   └── dashboard.png             # README showcase dashboard (2×2 grid)
+├── charts/                       # Generated PNG charts
+│   ├── hourly_trips.png
+│   ├── top_corridors.png
+│   ├── payment_methods.png
+│   ├── daily_trend.png
+│   ├── trip_duration.png
+│   ├── period_volumes.png
+│   └── ridership_heatmap.png
 ├── requirements.txt
 └── README.md
 ```
@@ -74,11 +76,11 @@ Charts are saved to `charts/` as PNGs. Summary statistics print to console.
 
 ## 🔧 Features
 
-- **Realistic synthetic data** — 65K+ hourly records across 15 Jakarta roads, 13 districts, 6 months, with realistic rush-hour and weather patterns
-- **7 visualization types** — Line charts, stacked bars, horizontal bars, pie charts, heatmaps, dual-axis plots
-- **Dark theme styling** — Teal/coral/gold palette on dark background
+- **Real Kaggle dataset** — 36,556 actual Transjakarta trip transactions (BRT transit)
+- **Privacy-first pipeline** — Passenger IDs, names, birth dates, and sex stripped before committing (`prepare_data.py`)
+- **7 visualization types** — Line charts, bar charts, pie charts, heatmaps, histograms
+- **Dark theme styling** — Coral/teal/gold palette on dark background
 - **OOP-ready architecture** — Clean separation: loader → charts → orchestrator
-- **Zero dependencies on external APIs** — Dataset bundled in repo, runs with one command
 
 ---
 
@@ -86,36 +88,36 @@ Charts are saved to `charts/` as PNGs. Summary statistics print to console.
 
 | # | Question | Chart |
 |---|----------|-------|
-| 1 | How does traffic volume differ between weekday and weekend? | `hourly_volume.png` |
-| 2 | When is congestion worst throughout the day? | `congestion_by_hour.png` |
-| 3 | Which roads are the most congested? | `worst_roads.png` |
-| 4 | How does traffic volume and speed trend month to month? | `monthly_trend.png` |
-| 5 | How does weather affect traffic speed? | `weather_impact.png` |
-| 6 | What's the vehicle type distribution across Jakarta? | `vehicle_mix.png` |
-| 7 | What does rush-hour speed look like across different roads? | `congestion_heatmap.png` |
+| 1 | When do people ride Transjakarta during weekdays vs weekends? | `hourly_trips.png` |
+| 2 | Which corridors carry the most passengers? | `top_corridors.png` |
+| 3 | How do passengers pay (which card banks)? | `payment_methods.png` |
+| 4 | How does ridership fluctuate day to day? | `daily_trend.png` |
+| 5 | How long is a typical Transjakarta trip? | `trip_duration.png` |
+| 6 | How do peak vs off-peak periods compare? | `period_volumes.png` |
+| 7 | What's the ridership density across days and hours? | `ridership_heatmap.png` |
 
 ---
 
 ## 🛠 Tech Stack
 
 - **Python 3.10+**
-- **Pandas** — Data manipulation, groupby, pivot tables, crosstabs
-- **Matplotlib / Seaborn** — Visualization with dark theme, heatmaps, dual-axis
-- **NumPy** — Numerical operations
+- **Pandas** — Data manipulation, groupby, datetime handling
+- **Matplotlib** — Visualization with dark theme, heatmaps
+- **NumPy** — Haversine distance calculation for trip segments
 
 ---
 
-## 📂 Dataset
+## 📂 Data Source
 
 | Source | Description |
 |--------|-------------|
-| Synthetic (bundled) | 65,175 hourly traffic records across Jakarta's major roads — motorcycles, cars, buses, trucks, speed, congestion, weather (Jan–Jun 2024) |
+| [Transjakarta Transportation Transaction — Kaggle](https://www.kaggle.com/datasets/dikisahkan/transjakarta-transportation-transaction) | Real April 2023 Transjakarta BRT trip transactions (CC0-1.0 license) |
 
-Dataset mirrors real Jakarta traffic patterns: motorcycle dominance (~60%), morning/evening rush hours, rain-induced slowdowns, and weekday vs weekend differences.
+**Privacy note:** The raw Kaggle export contains passenger identity fields (`transID`, `payCardID`, `payCardName`, `payCardBirthDate`, `payCardSex`). These were **removed** in `prepare_data.py` — the committed `data/transjakarta_trips.csv` contains only mobility features (routes, stops, timestamps, trip durations, distances, payment method). No personal data is published.
 
 ---
 
 <p align="center">
   <i>Built as part of a data science learning journey.</i><br>
-  <sub>Raw traffic data → Clean analysis → Polished insights</sub>
+  <sub>Raw transit transactions → Clean, private analysis → Polished insights</sub>
 </p>
