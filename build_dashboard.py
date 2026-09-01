@@ -201,40 +201,61 @@ def build_dashboard(df):
         "heat":   Image.open("assets/ch_heatmap.png"),
     }
 
-    # Tile size (square-ish panels)
-    TW, TH = 1050, 660
-    GAP = 28
-    MARGIN = 40
+    # ── Layout constants (consistent margins / padding) ─────────────
+    MARGIN   = 48          # outer canvas margin (uniform)
+    TILE_W   = 1040        # tile width (aspect-preserving, see below)
+    COL_GAP  = 36          # horizontal gap between columns
+    ROW_GAP  = 44          # vertical gap between chart rows
+    KPI_GAP  = 52          # KPI row → first chart row (clear breathing room)
+    SUB_GAP  = 26          # subtitle → KPI cards
+    TITLE_SP = 14          # main title → subtitle
 
-    # Header block
-    HEADER_H = 190
-    KPI_H = 110
-    HEADER_GAP = 18
-
-    # Canvas: 2 cols x 2 rows of tiles + header
-    inner_w = 2 * TW + GAP
+    inner_w = 2 * TILE_W + COL_GAP
     W = inner_w + 2 * MARGIN
-    H = HEADER_H + KPI_H + HEADER_GAP + 2 * TH + GAP + 2 * MARGIN
 
-    canvas = Image.new("RGB", (W, H), BG)
-    draw = ImageDraw.Draw(canvas)
+    # Pre-scale tiles preserving aspect ratio; compute row heights
+    order = ["hourly", "corr", "daily", "heat"]
+    scaled = {}
+    for k in order:
+        img = tiles[k]
+        h = int(round(TILE_W * img.height / img.width))
+        scaled[k] = img.resize((TILE_W, h), Image.LANCZOS)
 
-    # Main title
+    row_h = [max(scaled[order[0]].height, scaled[order[1]].height),
+             max(scaled[order[2]].height, scaled[order[3]].height)]
+
+    # Header geometry
     title_font = ImageFont.truetype("arialbd.ttf", 44)
     sub_font   = ImageFont.truetype("arial.ttf", 22)
     kpi_title  = ImageFont.truetype("arial.ttf", 20)
     kpi_val    = ImageFont.truetype("arialbd.ttf", 34)
 
+    title_bbox = title_font.getbbox("Jakarta Traffic Congestion Analysis Dashboard")
+    title_h = title_bbox[3] - title_bbox[1]
+    sub_bbox = sub_font.getbbox("Transjakarta BRT ridership · April 2023 · 36,556 trips · 216 corridors")
+    sub_h = sub_bbox[3] - sub_bbox[1]
+
+    KPI_H = 110
+    header_end = (MARGIN + TITLE_SP + title_h + SUB_GAP + KPI_H + KPI_GAP)
+
+    H = header_end + row_h[0] + ROW_GAP + row_h[1] + MARGIN
+
+    canvas = Image.new("RGB", (W, H), BG)
+    draw = ImageDraw.Draw(canvas)
+
+    # ── 1. Main title ───────────────────────────────────────────────
     tw = draw.textbbox((0, 0), "Jakarta Traffic Congestion Analysis Dashboard", font=title_font)
-    draw.text((W // 2 - tw[2] // 2, MARGIN + 8),
+    draw.text((W // 2 - tw[2] // 2, MARGIN),
               "Jakarta Traffic Congestion Analysis Dashboard",
               fill=TEXT, font=title_font)
+
+    # ── 2. Subtitle ─────────────────────────────────────────────────
     sub = "Transjakarta BRT ridership · April 2023 · 36,556 trips · 216 corridors"
     tw2 = draw.textbbox((0, 0), sub, font=sub_font)
-    draw.text((W // 2 - tw2[2] // 2, MARGIN + 66),
+    draw.text((W // 2 - tw2[2] // 2, MARGIN + TITLE_SP + title_h + 6),
               sub, fill=MUTED, font=sub_font)
 
-    # KPI cards
+    # ── 3. KPI cards ────────────────────────────────────────────────
     kpi_data = [
         ("Average Daily\nTrips", f"{kpi['avg_daily']:,}", TEAL),
         ("Peak Hour", f"{kpi['peak_hour']}:00", GOLD),
@@ -243,7 +264,7 @@ def build_dashboard(df):
     ]
     card_w = (inner_w - 3 * 20) // 4
     card_h = KPI_H
-    kpi_y = MARGIN + HEADER_H - 8
+    kpi_y = MARGIN + TITLE_SP + title_h + SUB_GAP
     for i, (label, value, color) in enumerate(kpi_data):
         x = MARGIN + i * (card_w + 20)
         # fit value into card width (leave padding for accent bar + edges)
@@ -251,14 +272,16 @@ def build_dashboard(df):
         draw_kpi_card(draw, x, kpi_y, card_w, card_h, label, fit_val, color,
                       kpi_title, kpi_val)
 
-    # Paste the 4 tiles in 2×2
-    grid_y = kpi_y + card_h + HEADER_GAP
+    # ── 4. Chart tiles (2×2), aspect-preserving, centered per row ───
+    grid_y = kpi_y + card_h + KPI_GAP
     for row in range(2):
+        row_top = grid_y + row * (row_h[0] + ROW_GAP)
         for col in range(2):
-            key = ["hourly", "corr", "daily", "heat"][row * 2 + col]
-            img = tiles[key].resize((TW, TH), Image.LANCZOS)
-            x = MARGIN + col * (TW + GAP)
-            y = grid_y + row * (TH + GAP)
+            key = order[row * 2 + col]
+            img = scaled[key]
+            # vertically center the tile inside its row box
+            y = row_top + (row_h[row] - img.height) // 2
+            x = MARGIN + col * (TILE_W + COL_GAP)
             canvas.paste(img, (x, y))
 
     os.makedirs("output", exist_ok=True)
