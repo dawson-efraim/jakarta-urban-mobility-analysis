@@ -161,17 +161,28 @@ def draw_kpi_card(draw, x, y, w, h, label, value, color, title_font, val_font):
                            outline=GRID, width=2)
     # accent bar
     draw.rounded_rectangle([x, y, x + 6, y + h], radius=3, fill=color)
+
+    # ── Value: anchored to top, above the label block ──────────────
     tw = draw.textbbox((0, 0), value, font=val_font)
-    draw.text((x + w // 2 - tw[2] // 2, y + h // 2 - 24), value,
+    value_y = y + 14
+    draw.text((x + w // 2 - tw[2] // 2, value_y), value,
               fill=color, font=val_font)
-    # multi-line label
+
+    # ── Label: anchored to bottom, stacked upward, never overlapping ──
     lines = label.split("\n")
-    line_h = 24
-    total_h = line_h * len(lines)
-    start_y = y + h - 20 - total_h
+    line_h = 26                       # generous line height for 20pt font
+    label_h = line_h * len(lines)
+    label_start = y + h - 16 - label_h  # top of the label block
+
+    # safety: if label block would collide with value, push label start down
+    v_bbox = val_font.getbbox(value)
+    v_bottom = value_y + (v_bbox[3] - v_bbox[1])
+    if label_start < v_bottom + 10:
+        label_start = v_bottom + 10
+
     for i, ln in enumerate(lines):
         tw2 = draw.textbbox((0, 0), ln, font=title_font)
-        draw.text((x + w // 2 - tw2[2] // 2, start_y + i * line_h), ln,
+        draw.text((x + w // 2 - tw2[2] // 2, label_start + i * line_h), ln,
                   fill=MUTED, font=title_font)
 
 
@@ -235,7 +246,7 @@ def build_dashboard(df):
     sub_bbox = sub_font.getbbox("Transjakarta BRT ridership · April 2023 · 36,556 trips · 216 corridors")
     sub_h = sub_bbox[3] - sub_bbox[1]
 
-    KPI_H = 110
+    KPI_H = 130
     header_end = (MARGIN + TITLE_SP + title_h + SUB_GAP + KPI_H + KPI_GAP)
 
     H = header_end + row_h[0] + ROW_GAP + row_h[1] + MARGIN
