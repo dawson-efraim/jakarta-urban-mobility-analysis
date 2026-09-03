@@ -1,56 +1,44 @@
-"""Jakarta Transjakarta Mobility Analysis — pipeline orchestrator."""
+"""
+Orchestrator for Jakarta Urban Mobility Analysis pipeline.
+"""
 import os
-import pandas as pd
+from src.data.loader import load_data
+from src.data.validate import run_all_validations
+from src.data.database import create_db
+from src.visualization.charts import (
+    chart_hourly_trips, chart_top_corridors, chart_payment_methods,
+    chart_daily_trend, chart_trip_duration, chart_period_volumes,
+    chart_ridership_heatmap
+)
+from src.analysis.sql_analysis import run_queries
 
-from data_loader import load_data
-import charts
+def main():
+    print("Loading data...")
+    df = load_data()
+    print(f"Loaded {len(df)} rows.")
 
+    print("Validating data...")
+    run_all_validations(df)
 
-def print_summary(df: pd.DataFrame):
-    print("=" * 60)
-    print("JAKARTA TRANSJAKARTA MOBILITY ANALYSIS")
-    print("=" * 60)
+    print("Creating SQLite database...")
+    create_db(overwrite=True)
 
-    total = len(df)
-    print(f"\nTotal trips        : {total:,}")
-    print(f"Date range         : {df['tapInTime'].min():%Y-%m-%d} → {df['tapInTime'].max():%Y-%m-%d}")
-    print(f"Corridors          : {df['corridorName'].nunique()}")
-    print(f"Stops (tap-in)     : {df['tapInStopsName'].nunique()}")
+    print("Running SQL analysis...")
+    run_queries()
 
-    avg_dur = df["trip_duration_min"].median()
-    print(f"\nMedian trip time   : {avg_dur:.0f} min")
+    print("Generating static charts...")
+    os.makedirs("charts", exist_ok=True)
+    chart_hourly_trips(df, output_dir="charts")
+    chart_top_corridors(df, output_dir="charts")
+    chart_payment_methods(df, output_dir="charts")
+    chart_daily_trend(df, output_dir="charts")
+    chart_trip_duration(df, output_dir="charts")
+    chart_period_volumes(df, output_dir="charts")
+    chart_ridership_heatmap(df, output_dir="charts")
+    print("Charts saved to charts/")
 
-    if "trip_distance_km" in df.columns:
-        avg_dist = df["trip_distance_km"].median()
-        print(f"Median trip dist   : {avg_dist:.1f} km")
-
-    busiest = df["corridorName"].value_counts().idxmax()
-    busiest_n = df["corridorName"].value_counts().max()
-    print(f"Busiest corridor   : {busiest} ({busiest_n:,} trips)")
-
-    weekend_pct = (df["is_weekend"] == 1).mean() * 100
-    print(f"Weekend trips      : {weekend_pct:.1f}% of total")
-
-    print("\nPayment method breakdown:")
-    for bank, n in df["payCardBank"].value_counts().items():
-        print(f"  {bank:<12} {n:,} trips")
-
-    peak = df["period"].value_counts().idxmax()
-    print(f"\nPeak period        : {peak}")
-
+    print("Pipeline complete. To run ML: python -m src.modeling.train")
+    print("To launch dashboard: streamlit run dashboard/app.py")
 
 if __name__ == "__main__":
-    df = load_data()
-    print_summary(df)
-
-    os.makedirs("charts", exist_ok=True)
-
-    charts.chart_hourly_trips(df)
-    charts.chart_top_corridors(df)
-    charts.chart_payment_methods(df)
-    charts.chart_daily_trend(df)
-    charts.chart_trip_duration(df)
-    charts.chart_period_volumes(df)
-    charts.chart_ridership_heatmap(df)
-
-    print("\nAll charts saved to charts/ ✔")
+    main()
